@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Item {
+  id       BigInt  @id @default(autoincrement())
+  typeId   BigInt  @unique @map("type_id")
+  name     String  @db.VarChar(255)
+  // Optional: group/category info later
+
+  snapshots MarketSnapshot[]
+
+  @@map("items")
+}
+
+model Region {
+  id       BigInt @id @default(autoincrement())
+  regionId BigInt @unique @map("region_id")
+  name     String @db.VarChar(255)
+
+  snapshots MarketSnapshot[]
+
+  @@map("regions")
+}
+
+model MarketSnapshot {
+  id              BigInt   @id @default(autoincrement())
+  itemId          BigInt   @map("item_id")
+  regionId        BigInt   @map("region_id")
+  avgPrice        Decimal  @db.Numeric(20, 2) @map("avg_price")
+  minPrice        Decimal  @db.Numeric(20, 2) @map("min_price")
+  maxPrice        Decimal  @db.Numeric(20, 2) @map("max_price")
+  totalVolume     BigInt   @map("total_volume")
+  buyOrdersCount  Int      @map("buy_orders_count")
+  sellOrdersCount Int      @map("sell_orders_count")
+  timestamp       DateTime
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  item   Item   @relation(fields: [itemId], references: [typeId])
+  region Region @relation(fields: [regionId], references: [regionId])
+
+  @@index([itemId, regionId])
+  @@index([timestamp])
+  @@index([itemId, regionId, timestamp])
+  @@map("market_snapshots")
+}
